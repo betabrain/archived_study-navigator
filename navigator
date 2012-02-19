@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+import csv
+import os
+import datetime
+import collections
+import optparse
+import heapq
+
+# note: name comes later to allow using the builtin sort
+EVENT = collections.namedtuple('EVENT', 'dt_start dt_end name rooms lecturers')
+
+def list_classes():
+    return os.listdir('classes')
+
+def read_class(name):
+    path = os.path.join('classes', name)
+
+    with file(path) as fh:
+        schedule = csv.reader(fh, delimiter='\t')
+
+        assert schedule.next() == ['Datum', 'Zeit', 'Raum', 'Dozierende'], \
+            'problem with the file format found in: ' + path
+
+        for entry in schedule:
+            weekday, date = entry[0].split(' ')
+            start, end = entry[1].split(' - ')
+            rooms = entry[2].split(', ')
+            lecturers = entry[3].split(', ')
+
+            year, month, day = map(int, date.split('.')[::-1])
+            start_h, start_m = map(int, start.split(':'))
+            dt_start = datetime.datetime(year, month, day, start_h, start_m)
+            end_h, end_m = map(int, end.split(':'))
+            dt_end = datetime.datetime(year, month, day, end_h, end_m)
+
+            yield EVENT(dt_start, dt_end, name, rooms, lecturers)
+
+def print_event(event):
+    print event.name
+    print '  start:', event.dt_start
+    print '    end:', event.dt_end
+    print '  rooms:', ', '.join(event.rooms)
+    print '     by:', ', '.join(event.lecturers)
+    print
+
+def main():
+    parser = optparse.OptionParser()
+
+    # todo: extend optparse to allow passing in datetime objects
+    parser.add_option('-d', '--datetime', dest='datetime',
+        default=datetime.datetime.now())
+
+    options, args = parser.parse_args()
+
+    next_events = []
+    for name in list_classes():
+        for event in read_class(name):
+            if event.dt_end >= options.datetime:
+                heapq.heappush(next_events, event)
+
+    for _ in xrange(8):
+        print_event(heapq.heappop(next_events))
+
+if __name__ == '__main__':
+    main()
+
