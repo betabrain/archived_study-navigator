@@ -10,9 +10,13 @@ import heapq
 EVENT = collections.namedtuple('EVENT', 'dt_start dt_end name rooms lecturers')
 
 def list_classes():
+    '''return names of classes by looking up files in ./classes
+    '''
     return os.listdir('classes')
 
 def read_class(name):
+    '''read a classes' csv file and return EVENT tuples
+    '''
     path = os.path.join('classes', name)
 
     with file(path) as fh:
@@ -36,6 +40,9 @@ def read_class(name):
             yield EVENT(dt_start, dt_end, name, rooms, lecturers)
 
 def print_beginning_between(events, start, end):
+    '''print events from a heapq, that begin between start and end.
+       all events ending before start are discarded.
+    '''
     while events:
         ev = heapq.heappop(events)
         if ev.dt_end <= start:
@@ -46,6 +53,8 @@ def print_beginning_between(events, start, end):
         print_event(ev)
 
 def print_event(event):
+    '''pretty print event details
+    '''
     print event.name
     print '  start:', event.dt_start
     print '    end:', event.dt_end
