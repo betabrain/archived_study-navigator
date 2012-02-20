@@ -46,20 +46,37 @@ def print_event(event):
 def main():
     parser = optparse.OptionParser()
 
-    # todo: extend optparse to allow passing in datetime objects
-    parser.add_option('-d', '--datetime', dest='datetime',
-        default=datetime.datetime.now())
+    parser.add_option('-0', '--today', action='store_true',
+        dest='today', default=False)
+    parser.add_option('-1', '--tomorrow', action='store_true',
+        dest='tomorrow', default=False)
+    parser.add_option('-w', '--week', action='store', dest='week',
+        type='int', default=-1)
 
     options, args = parser.parse_args()
 
+    # note: ignore past events
     next_events = []
+    now = datetime.datetime.now()
     for name in list_classes():
         for event in read_class(name):
-            if event.dt_end >= options.datetime:
+            if event.dt_end >= now:
                 heapq.heappush(next_events, event)
 
-    for _ in xrange(8):
-        print_event(heapq.heappop(next_events))
+    if options.today:
+        end = datetime.datetime(now.year, now.month, now.day, 23, 59, 59)
+        while True:
+            ev = heapq.heappop(next_events)
+            if ev.dt_start >= end:
+                heapq.heappush(next_events, ev)
+                break
+            print_event(ev)
+
+    if options.tomorrow:
+        pass
+
+    if options.week > -1:
+        pass
 
 if __name__ == '__main__':
     main()
