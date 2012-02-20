@@ -35,6 +35,16 @@ def read_class(name):
 
             yield EVENT(dt_start, dt_end, name, rooms, lecturers)
 
+def print_beginning_between(events, start, end):
+    while events:
+        ev = heapq.heappop(events)
+        if ev.dt_end <= start:
+            continue
+        if ev.dt_start >= end:
+            heapq.heappush(events, ev)
+            break
+        print_event(ev)
+
 def print_event(event):
     print event.name
     print '  start:', event.dt_start
@@ -55,25 +65,25 @@ def main():
 
     options, args = parser.parse_args()
 
+    # note: shorthands to clean up the following code
+    now = datetime.datetime.now()
+    today = datetime.datetime(now.year, now.month, now.day)
+
     # note: ignore past events
     next_events = []
-    now = datetime.datetime.now()
     for name in list_classes():
         for event in read_class(name):
             if event.dt_end >= now:
                 heapq.heappush(next_events, event)
 
     if options.today:
-        end = datetime.datetime(now.year, now.month, now.day, 23, 59, 59)
-        while True:
-            ev = heapq.heappop(next_events)
-            if ev.dt_start >= end:
-                heapq.heappush(next_events, ev)
-                break
-            print_event(ev)
+        end_of_today = today + datetime.timedelta(days=1, seconds=-1)
+        print_beginning_between(next_events, now, end_of_today)
 
     if options.tomorrow:
-        pass
+        tomorrow = today + datetime.timedelta(days=1)
+        end_of_tomorrow = tomorrow + datetime.timedelta(days=1, seconds=-1)
+        print_beginning_between(next_events, tomorrow, end_of_tomorrow)
 
     if options.week > -1:
         pass
