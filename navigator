@@ -86,7 +86,10 @@ def main():
         print_beginning_between(next_events, tomorrow, end_of_tomorrow)
 
     if options.week > -1:
-        pass
+        start_of_week = today + datetime.timedelta(
+            days= ((7-today.weekday())%7) + (7 * options.week))
+        end_of_week = start_of_week + datetime.timedelta(days=7, seconds=-1)
+        print_beginning_between(next_events, start_of_week, end_of_week)
 
 if __name__ == '__main__':
     main()
