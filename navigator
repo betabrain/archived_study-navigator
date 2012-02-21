@@ -5,9 +5,11 @@ import datetime
 import collections
 import optparse
 import heapq
+import yaml
 
 # note: name comes later to allow using the builtin sort
-EVENT = collections.namedtuple('EVENT', 'dt_start dt_end name rooms lecturers')
+EVENT = collections.namedtuple('EVENT',
+            'dt_start dt_end name rooms lecturers notes')
 
 def list_classes():
     '''return names of classes by looking up files in ./classes
@@ -17,13 +19,20 @@ def list_classes():
 def read_class(name):
     '''read a classes' csv file and return EVENT tuples
     '''
-    path = os.path.join('classes', name)
+    schedule_path = os.path.join('classes', name)
+    notes_path = os.path.join('notes', name)
 
-    with file(path) as fh:
+    with file(schedule_path) as fh:
         schedule = csv.reader(fh, delimiter='\t')
 
         assert schedule.next() == ['Datum', 'Zeit', 'Raum', 'Dozierende'], \
             'problem with the file format found in: ' + path
+
+        # what: load notes
+        class_notes = {}
+        if os.path.exists(notes_path):
+            with file(notes_path) as fh:
+                class_notes = yaml.load(fh)
 
         for entry in schedule:
             weekday, date = entry[0].split(' ')
@@ -37,7 +46,9 @@ def read_class(name):
             end_h, end_m = map(int, end.split(':'))
             dt_end = datetime.datetime(year, month, day, end_h, end_m)
 
-            yield EVENT(dt_start, dt_end, name, rooms, lecturers)
+            notes = class_notes.get(date, [])
+
+            yield EVENT(dt_start, dt_end, name, rooms, lecturers, notes)
 
 def print_beginning_between(events, start, end):
     '''print events from a heapq, that begin between start and end.
@@ -60,6 +71,8 @@ def print_event(event):
     print '    end:', event.dt_end
     print '  rooms:', ', '.join(event.rooms)
     print '     by:', ', '.join(event.lecturers)
+    for note in event.notes:
+        print '   note:', note
     print
 
 def main():
