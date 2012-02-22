@@ -71,8 +71,8 @@ def print_event(event):
     print '    end:', event.dt_end
     print '  rooms:', ', '.join(event.rooms)
     print '     by:', ', '.join(event.lecturers)
-    for note in event.notes:
-        print '   note:', note
+    if event.notes:
+        print '  notes:', ('\n'+9*' ').join(event.notes)
     print
 
 def main():
