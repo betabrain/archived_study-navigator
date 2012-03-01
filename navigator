@@ -6,6 +6,7 @@ import collections
 import optparse
 import heapq
 import yaml
+import textwrap
 
 # note: name comes later to allow using the builtin sort
 EVENT = collections.namedtuple('EVENT',
@@ -71,8 +72,16 @@ def print_event(event):
     print '    end:', event.dt_end
     print '  rooms:', ', '.join(event.rooms)
     print '     by:', ', '.join(event.lecturers)
-    if event.notes:
-        print '  notes:', ('\n'+9*' ').join(event.notes)
+    nice_notes = []
+    for note in event.notes:
+        for i, line in enumerate(textwrap.wrap(note, width=50)):
+            if i == 0:
+                line = '   note: ' + line
+            else:
+                line = '         ' + line
+            nice_notes.append(line)
+    if nice_notes:
+        print '\n'.join(nice_notes)
     print
 
 def main():
