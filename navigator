@@ -64,6 +64,18 @@ def print_beginning_between(events, start, end):
             break
         print_event(ev)
 
+def print_workload_between(events, start, end):
+    '''print the event notes from a heapq, of all events between
+       start and end.'''
+    while events:
+        ev = heapq.heappop(events)
+        if ev.dt_end <= start:
+            continue
+        if ev.dt_start >= end:
+            heapq.heappush(events, ev)
+            break
+        print_workload(ev)
+
 def print_event(event):
     '''pretty print event details
     '''
@@ -72,8 +84,12 @@ def print_event(event):
     print '    end:', event.dt_end
     print '  rooms:', ', '.join(event.rooms)
     print '     by:', ', '.join(event.lecturers)
+    print_notes(event.notes)
+    print
+
+def print_notes(notes):
     nice_notes = []
-    for note in event.notes:
+    for note in notes:
         for i, line in enumerate(textwrap.wrap(note, width=50)):
             if i == 0:
                 line = '   note: ' + line
@@ -82,6 +98,12 @@ def print_event(event):
             nice_notes.append(line)
     if nice_notes:
         print '\n'.join(nice_notes)
+
+def print_workload(event):
+    '''print an event's name and notes.
+    '''
+    print event.dt_start.date(), event.name
+    print_notes(event.notes)
     print
 
 def main():
@@ -92,6 +114,8 @@ def main():
     parser.add_option('-1', '--tomorrow', action='store_true',
         dest='tomorrow', default=False)
     parser.add_option('-w', '--week', action='store', dest='week',
+        type='int', default=-1)
+    parser.add_option('-l', '--workload', action='store', dest='workload',
         type='int', default=-1)
     parser.add_option('-p', '--progress', action='store_true',
         dest='progress', default=False)
@@ -126,6 +150,11 @@ def main():
             days=(-today.weekday() + 7 * options.week))
         end_of_week = start_of_week + datetime.timedelta(days=7, seconds=-1)
         print_beginning_between(next_events, start_of_week, end_of_week)
+
+    if options.workload > -1:
+        end_period = today + datetime.timedelta(days=options.workload*7,
+            seconds=-1)
+        print_workload_between(next_events, today, end_period)
 
     if options.progress:
         print 'progress:', round(100.0*num_completed/total_num_events, 1), '%'
